@@ -281,7 +281,8 @@ export default function App() {
           currentFileId={currentFileId}
         />
         
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Fixed width container for right pane */}
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ minWidth: 0 }}>
           <PanelGroup direction="vertical" className="flex-1">
             <Panel defaultSize={40} minSize={25}>
               <div className="p-6 bg-white h-full">

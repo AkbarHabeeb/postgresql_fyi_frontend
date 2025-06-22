@@ -33,12 +33,6 @@ export const SchemaTree: React.FC<SchemaTreeProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          Database Schema
-        </h3>
-      </div>
-      
       <button
         onClick={onRefresh}
         disabled={!isConnected || isLoading}

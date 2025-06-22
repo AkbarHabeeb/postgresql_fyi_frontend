@@ -10,10 +10,6 @@ interface QueryHistoryProps {
 export const QueryHistory: React.FC<QueryHistoryProps> = ({ history, onSelectQuery }) => {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-        Query History
-      </h3>
-      
       <div className="max-h-48 overflow-y-auto space-y-1">
         {history.length === 0 ? (
           <div className="text-center py-8 text-gray-500">

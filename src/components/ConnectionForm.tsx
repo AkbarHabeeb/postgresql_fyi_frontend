@@ -73,10 +73,6 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-        Database Connection
-      </h3>
-      
       {/* Saved Connections */}
       {savedConnections.length > 0 && (
         <div className="space-y-2">
