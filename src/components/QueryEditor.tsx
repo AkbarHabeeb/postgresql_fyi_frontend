@@ -1,23 +1,30 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { Play } from 'lucide-react';
+import { Play, Save } from 'lucide-react';
 
 interface QueryEditorProps {
   value: string;
   onChange: (value: string | undefined) => void;
   onExecute: () => void;
+  onSave: () => void;
   isConnected: boolean;
   isExecuting: boolean;
+  hasUnsavedChanges: boolean;
+  currentFileName?: string;
 }
 
 export const QueryEditor: React.FC<QueryEditorProps> = ({
   value,
   onChange,
   onExecute,
+  onSave,
   isConnected,
-  isExecuting
+  isExecuting,
+  hasUnsavedChanges,
+  currentFileName
 }) => {
   const editorRef = useRef<any>(null);
+  const [showSaveTooltip, setShowSaveTooltip] = useState(false);
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
@@ -120,18 +127,30 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
       }
     });
 
-    // Add keyboard shortcut for execution
+    // Add keyboard shortcuts
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
       if (isConnected && !isExecuting) {
         onExecute();
       }
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      onSave();
     });
   };
 
   return (
     <div className="space-y-4 h-full flex flex-col">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">SQL Query</h3>
+        <div className="flex items-center space-x-2">
+          <h3 className="text-lg font-semibold text-gray-900">SQL Query</h3>
+          {currentFileName && (
+            <span className="text-sm text-gray-500">
+              - {currentFileName}
+              {hasUnsavedChanges && <span className="text-orange-500 ml-1">*</span>}
+            </span>
+          )}
+        </div>
         <div className="flex space-x-2">
           <button
             onClick={onExecute}
@@ -144,7 +163,7 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
         </div>
       </div>
       
-      <div className="border border-gray-300 rounded-md overflow-hidden flex-1">
+      <div className="border border-gray-300 rounded-md overflow-hidden flex-1 relative">
         <Editor
           height="100%"
           language="postgresql"
@@ -165,6 +184,27 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
             tabCompletion: 'on',
           }}
         />
+        
+        {/* Save Button - Bottom Right Corner */}
+        <div className="absolute bottom-4 right-4">
+          <button
+            onClick={onSave}
+            onMouseEnter={() => setShowSaveTooltip(true)}
+            onMouseLeave={() => setShowSaveTooltip(false)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save</span>
+          </button>
+          
+          {/* Save Tooltip */}
+          {showSaveTooltip && (
+            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap">
+              Save current query to file (Ctrl+S)
+              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

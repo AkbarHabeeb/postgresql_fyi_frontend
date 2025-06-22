@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { CollapsibleSection } from './CollapsibleSection';
 import { ConnectionForm } from './ConnectionForm';
 import { SchemaTree } from './SchemaTree';
 import { QueryHistory } from './QueryHistory';
@@ -24,10 +25,11 @@ interface SidebarProps {
   onDeleteConnection: (id: string) => void;
   sqlFiles: SqlFile[];
   onCreateSqlFile: (name: string, content: string) => void;
-  onUpdateSqlFile: (id: string, content: string) => void;
+  onUpdateSqlFile: (id: string, name?: string, content?: string) => void;
   onDeleteSqlFile: (id: string) => void;
   onLoadSqlFile: (file: SqlFile) => void;
   currentQuery: string;
+  currentFileId?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -51,7 +53,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onUpdateSqlFile,
   onDeleteSqlFile,
   onLoadSqlFile,
-  currentQuery
+  currentQuery,
+  currentFileId
 }) => {
   return (
     <div className={`relative bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 transition-all duration-300 ${
@@ -71,39 +74,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Content */}
       <div className={`${isCollapsed ? 'hidden' : 'block'} h-full overflow-y-auto`}>
-        <div className="p-6 space-y-8">
-          <ConnectionForm
-            onConnect={onConnect}
-            onDisconnect={onDisconnect}
-            isConnected={isConnected}
-            isConnecting={isConnecting}
-            savedConnections={savedConnections}
-            onSaveConnection={onSaveConnection}
-            onDeleteConnection={onDeleteConnection}
-          />
+        <div className="p-6 space-y-6">
+          <CollapsibleSection title="Database Connection" storageKey="connection" defaultExpanded={true}>
+            <ConnectionForm
+              onConnect={onConnect}
+              onDisconnect={onDisconnect}
+              isConnected={isConnected}
+              isConnecting={isConnecting}
+              savedConnections={savedConnections}
+              onSaveConnection={onSaveConnection}
+              onDeleteConnection={onDeleteConnection}
+            />
+          </CollapsibleSection>
           
-          <SqlFileManager
-            sqlFiles={sqlFiles}
-            onCreateFile={onCreateSqlFile}
-            onDeleteFile={onDeleteSqlFile}
-            onLoadFile={onLoadSqlFile}
-            currentQuery={currentQuery}
-            onSaveCurrentQuery={onUpdateSqlFile}
-            isConnected={isConnected}
-          />
+          <CollapsibleSection title="SQL Files" storageKey="sql-files" defaultExpanded={true}>
+            <SqlFileManager
+              sqlFiles={sqlFiles}
+              onCreateFile={onCreateSqlFile}
+              onUpdateFile={onUpdateSqlFile}
+              onDeleteFile={onDeleteSqlFile}
+              onLoadFile={onLoadSqlFile}
+              currentQuery={currentQuery}
+              currentFileId={currentFileId}
+              isConnected={isConnected}
+            />
+          </CollapsibleSection>
           
-          <SchemaTree
-            schema={schema}
-            onRefresh={onRefreshSchema}
-            onColumnClick={onColumnClick}
-            isConnected={isConnected}
-            isLoading={isSchemaLoading}
-          />
+          <CollapsibleSection title="Database Schema" storageKey="schema" defaultExpanded={true}>
+            <SchemaTree
+              schema={schema}
+              onRefresh={onRefreshSchema}
+              onColumnClick={onColumnClick}
+              isConnected={isConnected}
+              isLoading={isSchemaLoading}
+            />
+          </CollapsibleSection>
           
-          <QueryHistory
-            history={queryHistory}
-            onSelectQuery={onSelectQuery}
-          />
+          <CollapsibleSection title="Query History" storageKey="history" defaultExpanded={false}>
+            <QueryHistory
+              history={queryHistory}
+              onSelectQuery={onSelectQuery}
+            />
+          </CollapsibleSection>
         </div>
       </div>
     </div>

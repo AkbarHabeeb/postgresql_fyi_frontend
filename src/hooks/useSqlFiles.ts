@@ -3,8 +3,8 @@ import { SqlFile } from '../types';
 
 export function useSqlFiles(): [
   SqlFile[],
-  (name: string, content: string) => void,
-  (id: string, content: string) => void,
+  (name: string, content: string) => string, // Returns file ID
+  (id: string, name?: string, content?: string) => void,
   (id: string) => void
 ] {
   const [sqlFiles, setSqlFiles] = useState<SqlFile[]>([]);
@@ -33,9 +33,10 @@ export function useSqlFiles(): [
     }
   };
 
-  const createSqlFile = (name: string, content: string) => {
+  const createSqlFile = (name: string, content: string): string => {
+    const fileId = Date.now().toString();
     const newFile: SqlFile = {
-      id: Date.now().toString(),
+      id: fileId,
       name: name.endsWith('.sql') ? name : `${name}.sql`,
       content,
       createdAt: new Date(),
@@ -45,14 +46,19 @@ export function useSqlFiles(): [
     const updatedFiles = [...sqlFiles, newFile];
     setSqlFiles(updatedFiles);
     saveToStorage(updatedFiles);
+    return fileId;
   };
 
-  const updateSqlFile = (id: string, content: string) => {
-    const updatedFiles = sqlFiles.map(file => 
-      file.id === id 
-        ? { ...file, content, updatedAt: new Date() }
-        : file
-    );
+  const updateSqlFile = (id: string, name?: string, content?: string) => {
+    const updatedFiles = sqlFiles.map(file => {
+      if (file.id === id) {
+        const updates: Partial<SqlFile> = { updatedAt: new Date() };
+        if (name !== undefined) updates.name = name.endsWith('.sql') ? name : `${name}.sql`;
+        if (content !== undefined) updates.content = content;
+        return { ...file, ...updates };
+      }
+      return file;
+    });
     setSqlFiles(updatedFiles);
     saveToStorage(updatedFiles);
   };

@@ -39,6 +39,18 @@ export default function App() {
 
   // SQL Files
   const [sqlFiles, createSqlFile, updateSqlFile, deleteSqlFile] = useSqlFiles();
+  const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+  const [originalFileContent, setOriginalFileContent] = useState<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Check for unsaved changes
+  useEffect(() => {
+    if (currentFileId) {
+      setHasUnsavedChanges(queryText !== originalFileContent);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [queryText, originalFileContent, currentFileId]);
 
   // Check bridge status on mount and periodically
   useEffect(() => {
@@ -166,11 +178,50 @@ export default function App() {
 
   const handleSelectQuery = useCallback((sql: string) => {
     setQueryText(sql);
+    setCurrentFileId(null);
+    setOriginalFileContent('');
   }, []);
 
   const handleLoadSqlFile = useCallback((file: SqlFile) => {
     setQueryText(file.content);
+    setCurrentFileId(file.id);
+    setOriginalFileContent(file.content);
   }, []);
+
+  const handleSaveQuery = useCallback(() => {
+    if (currentFileId) {
+      // Update existing file
+      updateSqlFile(currentFileId, undefined, queryText);
+      setOriginalFileContent(queryText);
+    } else {
+      // Create new file
+      const fileName = `query-${Date.now()}.sql`;
+      const fileId = createSqlFile(fileName, queryText);
+      setCurrentFileId(fileId);
+      setOriginalFileContent(queryText);
+    }
+  }, [currentFileId, queryText, updateSqlFile, createSqlFile]);
+
+  const handleCreateSqlFile = useCallback((name: string, content: string) => {
+    const fileId = createSqlFile(name, content);
+    return fileId;
+  }, [createSqlFile]);
+
+  const handleUpdateSqlFile = useCallback((id: string, name?: string, content?: string) => {
+    updateSqlFile(id, name, content);
+    // If updating the current file's content, update our tracking
+    if (id === currentFileId && content !== undefined) {
+      setOriginalFileContent(content);
+    }
+  }, [updateSqlFile, currentFileId]);
+
+  const getCurrentFileName = useCallback(() => {
+    if (currentFileId) {
+      const file = sqlFiles.find(f => f.id === currentFileId);
+      return file?.name;
+    }
+    return undefined;
+  }, [currentFileId, sqlFiles]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -222,11 +273,12 @@ export default function App() {
           onSaveConnection={saveConnection}
           onDeleteConnection={deleteConnection}
           sqlFiles={sqlFiles}
-          onCreateSqlFile={createSqlFile}
-          onUpdateSqlFile={updateSqlFile}
+          onCreateSqlFile={handleCreateSqlFile}
+          onUpdateSqlFile={handleUpdateSqlFile}
           onDeleteSqlFile={deleteSqlFile}
           onLoadSqlFile={handleLoadSqlFile}
           currentQuery={queryText}
+          currentFileId={currentFileId}
         />
         
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -237,8 +289,11 @@ export default function App() {
                   value={queryText}
                   onChange={(value) => setQueryText(value || '')}
                   onExecute={executeQuery}
+                  onSave={handleSaveQuery}
                   isConnected={isConnected}
                   isExecuting={isExecuting}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  currentFileName={getCurrentFileName()}
                 />
               </div>
             </Panel>
