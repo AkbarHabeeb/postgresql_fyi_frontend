@@ -9,7 +9,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useSavedConnections } from './hooks/useSavedConnections';
 import { useSqlFiles } from './hooks/useSqlFiles';
 import { bridgeService } from './services/bridgeService';
-import { ConnectionConfig, QueryResult, DatabaseSchema, QueryHistoryItem, SqlFile } from './types';
+import { ConnectionConfig, QueryResult, DatabaseSchema, QueryHistoryItem, SqlFile, SavedConnection } from './types';
 
 export default function App() {
   // UI State
@@ -23,6 +23,7 @@ export default function App() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [currentDatabase, setCurrentDatabase] = useState<string | null>(null);
   const [currentHost, setCurrentHost] = useState<string | null>(null);
+  const [currentConnectionConfig, setCurrentConnectionConfig] = useState<ConnectionConfig | null>(null);
   
   // Query State
   const [queryText, setQueryText] = useState('');
@@ -81,6 +82,21 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Get display name for current connection
+  const getCurrentConnectionDisplayName = useCallback(() => {
+    if (!currentConnectionConfig) return currentDatabase;
+    
+    // Check if current connection matches any saved connection
+    const savedConnection = savedConnections.find(saved => 
+      saved.config.host === currentConnectionConfig.host &&
+      saved.config.port === currentConnectionConfig.port &&
+      saved.config.database === currentConnectionConfig.database &&
+      saved.config.username === currentConnectionConfig.username
+    );
+    
+    return savedConnection ? savedConnection.name : currentDatabase;
+  }, [currentConnectionConfig, savedConnections, currentDatabase]);
+
   const handleConnect = useCallback(async (config: ConnectionConfig) => {
     setIsConnecting(true);
     setConnectionError(null);
@@ -92,6 +108,7 @@ export default function App() {
         setIsConnected(true);
         setCurrentDatabase(config.database);
         setCurrentHost(config.host);
+        setCurrentConnectionConfig(config);
         setConnectionError(null);
         await loadSchema(response.connectionId);
       } else {
@@ -121,6 +138,7 @@ export default function App() {
       setIsConnected(false);
       setCurrentDatabase(null);
       setCurrentHost(null);
+      setCurrentConnectionConfig(null);
       setSchema(null);
       setQueryResult(null);
       setQueryError(null);
@@ -240,7 +258,7 @@ export default function App() {
           isConnected={isConnected} 
           statusText={bridgeStatus.message}
           bridgeConnected={bridgeStatus.connected}
-          currentDatabase={currentDatabase}
+          currentDatabase={getCurrentConnectionDisplayName()}
           currentHost={currentHost}
         />
         
