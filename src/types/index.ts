@@ -26,6 +26,14 @@ export interface QueryHistoryItem {
   timestamp: Date;
 }
 
+export interface SqlFile {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface TableColumn {
   name: string;
   type: string;

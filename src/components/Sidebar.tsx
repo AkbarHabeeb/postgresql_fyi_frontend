@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ConnectionForm } from './ConnectionForm';
 import { SchemaTree } from './SchemaTree';
 import { QueryHistory } from './QueryHistory';
-import { ConnectionConfig, DatabaseSchema, QueryHistoryItem, SavedConnection } from '../types';
+import { SqlFileManager } from './SqlFileManager';
+import { ConnectionConfig, DatabaseSchema, QueryHistoryItem, SavedConnection, SqlFile } from '../types';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -21,6 +22,12 @@ interface SidebarProps {
   savedConnections: SavedConnection[];
   onSaveConnection: (name: string, config: ConnectionConfig) => void;
   onDeleteConnection: (id: string) => void;
+  sqlFiles: SqlFile[];
+  onCreateSqlFile: (name: string, content: string) => void;
+  onUpdateSqlFile: (id: string, content: string) => void;
+  onDeleteSqlFile: (id: string) => void;
+  onLoadSqlFile: (file: SqlFile) => void;
+  currentQuery: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -38,7 +45,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectQuery,
   savedConnections,
   onSaveConnection,
-  onDeleteConnection
+  onDeleteConnection,
+  sqlFiles,
+  onCreateSqlFile,
+  onUpdateSqlFile,
+  onDeleteSqlFile,
+  onLoadSqlFile,
+  currentQuery
 }) => {
   return (
     <div className={`relative bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 transition-all duration-300 ${
@@ -67,6 +80,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             savedConnections={savedConnections}
             onSaveConnection={onSaveConnection}
             onDeleteConnection={onDeleteConnection}
+          />
+          
+          <SqlFileManager
+            sqlFiles={sqlFiles}
+            onCreateFile={onCreateSqlFile}
+            onDeleteFile={onDeleteSqlFile}
+            onLoadFile={onLoadSqlFile}
+            currentQuery={currentQuery}
+            onSaveCurrentQuery={onUpdateSqlFile}
+            isConnected={isConnected}
           />
           
           <SchemaTree

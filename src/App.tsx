@@ -6,8 +6,9 @@ import { QueryEditor } from './components/QueryEditor';
 import { QueryResults } from './components/QueryResults';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useSavedConnections } from './hooks/useSavedConnections';
+import { useSqlFiles } from './hooks/useSqlFiles';
 import { bridgeService } from './services/bridgeService';
-import { ConnectionConfig, QueryResult, DatabaseSchema, QueryHistoryItem } from './types';
+import { ConnectionConfig, QueryResult, DatabaseSchema, QueryHistoryItem, SqlFile } from './types';
 
 export default function App() {
   // UI State
@@ -35,6 +36,9 @@ export default function App() {
   
   // Saved Connections
   const [savedConnections, saveConnection, deleteConnection] = useSavedConnections();
+
+  // SQL Files
+  const [sqlFiles, createSqlFile, updateSqlFile, deleteSqlFile] = useSqlFiles();
 
   // Check bridge status on mount and periodically
   useEffect(() => {
@@ -164,6 +168,10 @@ export default function App() {
     setQueryText(sql);
   }, []);
 
+  const handleLoadSqlFile = useCallback((file: SqlFile) => {
+    setQueryText(file.content);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header 
@@ -213,6 +221,12 @@ export default function App() {
           savedConnections={savedConnections}
           onSaveConnection={saveConnection}
           onDeleteConnection={deleteConnection}
+          sqlFiles={sqlFiles}
+          onCreateSqlFile={createSqlFile}
+          onUpdateSqlFile={updateSqlFile}
+          onDeleteSqlFile={deleteSqlFile}
+          onLoadSqlFile={handleLoadSqlFile}
+          currentQuery={queryText}
         />
         
         <div className="flex-1 flex flex-col overflow-hidden">
