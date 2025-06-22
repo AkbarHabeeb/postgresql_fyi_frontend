@@ -36,15 +36,15 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     <div className="space-y-3">
       <button
         onClick={toggleExpanded}
-        className="w-full flex items-center justify-between text-left hover:bg-gray-100 rounded-md p-2 transition-colors"
+        className="w-full flex items-center justify-between text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md p-2 transition-colors duration-200"
       >
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
           {title}
         </h3>
         {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+          <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         )}
       </button>
       

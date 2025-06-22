@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { Play, Save } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface QueryEditorProps {
   value: string;
@@ -24,6 +25,7 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
   currentFileName
 }) => {
   const editorRef = useRef<any>(null);
+  const { isDark } = useTheme();
   const [showSaveTooltip, setShowSaveTooltip] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [showFileNameDialog, setShowFileNameDialog] = useState(false);
@@ -175,9 +177,9 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
     <div className="space-y-4 h-full flex flex-col">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-semibold text-gray-900">SQL Query</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">SQL Query</h3>
           {currentFileName && (
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               - {currentFileName}
               {hasUnsavedChanges && <span className="text-orange-500 ml-1">*</span>}
             </span>
@@ -195,14 +197,14 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
         </div>
       </div>
       
-      <div className="border border-gray-300 rounded-md overflow-hidden flex-1 relative">
+      <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden flex-1 relative">
         <Editor
           height="100%"
           language="postgresql"
           value={value}
           onChange={onChange}
           onMount={handleEditorDidMount}
-          theme="vs"
+          theme={isDark ? 'vs-dark' : 'vs'}
           options={{
             minimap: { enabled: false },
             fontSize: 14,
@@ -239,9 +241,9 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
           
           {/* Save Tooltip */}
           {showSaveTooltip && (
-            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap">
+            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap">
               Save current query to file (Ctrl+S)
-              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
             </div>
           )}
         </div>
@@ -250,11 +252,11 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
       {/* File Name Dialog */}
       {showFileNameDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Save SQL File</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Save SQL File</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   File Name
                 </label>
                 <input
@@ -262,7 +264,7 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
                   value={newFileName}
                   onChange={(e) => setNewFileName(e.target.value)}
                   placeholder="my-query.sql"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {

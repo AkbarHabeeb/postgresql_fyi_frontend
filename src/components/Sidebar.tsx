@@ -57,13 +57,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentFileId
 }) => {
   return (
-    <div className={`relative bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 transition-all duration-300 ${
+    <div className={`relative bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
       isCollapsed ? 'w-12' : 'w-80'
     }`}>
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-6 z-10 bg-blue-600 hover:bg-blue-700 border border-white rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+        className="absolute -right-3 top-6 z-10 bg-blue-600 hover:bg-blue-700 dark:bg-gray-700 dark:hover:bg-gray-600 border border-white dark:border-gray-600 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
       >
         {isCollapsed ? (
           <ChevronRight className="w-4 h-4 text-white" />

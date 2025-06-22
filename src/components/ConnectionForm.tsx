@@ -76,20 +76,20 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
       {/* Saved Connections */}
       {savedConnections.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-gray-600">Saved Connections</h4>
+          <h4 className="text-xs font-medium text-gray-600 dark:text-gray-400">Saved Connections</h4>
           <div className="space-y-1">
             {savedConnections.map((saved) => (
-              <div key={saved.id} className="flex items-center justify-between bg-gray-50 rounded-md p-2">
+              <div key={saved.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-md p-2">
                 <div className="flex items-center space-x-2 flex-1">
-                  <Database className="w-3 h-3 text-gray-500" />
-                  <span className="text-xs font-medium text-gray-700 truncate">
+                  <Database className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
                     {saved.name}
                   </span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={() => handleLoadConnection(saved)}
-                    className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                    className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                     title="Load connection details"
                   >
                     Load
@@ -97,14 +97,14 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   <button
                     onClick={() => handleQuickConnect(saved)}
                     disabled={isConnecting}
-                    className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+                    className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors disabled:opacity-50"
                     title="Connect immediately"
                   >
                     Connect
                   </button>
                   <button
                     onClick={() => onDeleteConnection(saved.id)}
-                    className="text-xs p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                    className="text-xs p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors"
                     title="Delete connection"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -118,35 +118,35 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
       
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Host</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Host</label>
           <input
             type="text"
             value={config.host}
             onChange={(e) => handleInputChange('host', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             autoComplete="url"
             required
           />
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Port</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Port</label>
           <input
             type="number"
             value={config.port}
             onChange={(e) => handleInputChange('port', parseInt(e.target.value))}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             required
           />
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Database</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Database</label>
           <input
             type="text"
             value={config.database}
             onChange={(e) => handleInputChange('database', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             placeholder="mydb"
             autoComplete="off"
             required
@@ -154,12 +154,12 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Username</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Username</label>
           <input
             type="text"
             value={config.username}
             onChange={(e) => handleInputChange('username', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             placeholder="postgres"
             autoComplete="username"
             required
@@ -167,23 +167,23 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Password</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Password</label>
           <input
             type="password"
             value={config.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             autoComplete="current-password"
             required
           />
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">SSL Mode</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">SSL Mode</label>
           <select
             value={config.sslMode}
             onChange={(e) => handleInputChange('sslMode', e.target.value as any)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           >
             <option value="auto">Auto (detect based on host)</option>
             <option value="require">Require SSL</option>
@@ -227,7 +227,7 @@ export const ConnectionForm: React.FC<ConnectionFormProps> = ({
                     value={connectionName}
                     onChange={(e) => setConnectionName(e.target.value)}
                     placeholder="Connection name"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   />
                   <div className="flex space-x-2">
                     <button

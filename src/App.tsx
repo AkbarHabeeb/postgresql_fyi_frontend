@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { QueryEditor } from './components/QueryEditor';
 import { QueryResults } from './components/QueryResults';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useSavedConnections } from './hooks/useSavedConnections';
 import { useSqlFiles } from './hooks/useSqlFiles';
@@ -227,97 +228,99 @@ export default function App() {
   }, [currentFileId, sqlFiles]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <Header 
-        isConnected={isConnected} 
-        statusText={bridgeStatus.message}
-      />
-      
-      {/* Bridge Service Status Box - Only show when NOT connected */}
-      {!bridgeStatus.connected && (
-        <div className="mx-6 mt-4 mb-2">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <div className="w-3 h-3 bg-red-400 rounded-full mt-1"></div>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Bridge Service Required</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p className="mb-2">To use this PostgreSQL client, you need to install and run the bridge service:</p>
-                  <div className="bg-red-100 rounded-md p-3 font-mono text-xs">
-                    <div className="mb-1">1. Install the bridge service:</div>
-                    <div className="bg-white rounded px-2 py-1 mb-2">npm install -g connectpsql</div>
-                    <div className="mb-1">2. Start the bridge service:</div>
-                    <div className="bg-white rounded px-2 py-1">connectpsql start --cors-origin "*" --port 1234</div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col transition-colors duration-300">
+        <Header 
+          isConnected={isConnected} 
+          statusText={bridgeStatus.message}
+        />
+        
+        {/* Bridge Service Status Box - Only show when NOT connected */}
+        {!bridgeStatus.connected && (
+          <div className="mx-6 mt-4 mb-2">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className="w-3 h-3 bg-red-400 rounded-full mt-1"></div>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Bridge Service Required</h3>
+                  <div className="mt-2 text-sm text-red-700 dark:text-red-400">
+                    <p className="mb-2">To use this PostgreSQL client, you need to install and run the bridge service:</p>
+                    <div className="bg-red-100 dark:bg-red-900/30 rounded-md p-3 font-mono text-xs">
+                      <div className="mb-1">1. Install the bridge service:</div>
+                      <div className="bg-white dark:bg-gray-800 rounded px-2 py-1 mb-2">npm install -g connectpsql</div>
+                      <div className="mb-1">2. Start the bridge service:</div>
+                      <div className="bg-white dark:bg-gray-800 rounded px-2 py-1">connectpsql start --cors-origin "*" --port 1234</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onConnect={handleConnect}
-          onDisconnect={handleDisconnect}
-          isConnected={isConnected}
-          isConnecting={isConnecting}
-          schema={schema}
-          onRefreshSchema={() => loadSchema()}
-          isSchemaLoading={isSchemaLoading}
-          onColumnClick={handleColumnClick}
-          queryHistory={queryHistory}
-          onSelectQuery={handleSelectQuery}
-          savedConnections={savedConnections}
-          onSaveConnection={saveConnection}
-          onDeleteConnection={deleteConnection}
-          sqlFiles={sqlFiles}
-          onCreateSqlFile={handleCreateSqlFile}
-          onUpdateSqlFile={handleUpdateSqlFile}
-          onDeleteSqlFile={deleteSqlFile}
-          onLoadSqlFile={handleLoadSqlFile}
-          currentQuery={queryText}
-          currentFileId={currentFileId}
-        />
+        )}
         
-        {/* Main content area with fixed layout */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          <PanelGroup direction="vertical" className="flex-1">
-            <Panel defaultSize={40} minSize={25}>
-              <div className="p-6 bg-white h-full">
-                <QueryEditor
-                  value={queryText}
-                  onChange={(value) => setQueryText(value || '')}
-                  onExecute={executeQuery}
-                  onSave={handleSaveQuery}
-                  isConnected={isConnected}
-                  isExecuting={isExecuting}
-                  hasUnsavedChanges={hasUnsavedChanges}
-                  currentFileName={getCurrentFileName()}
-                />
-              </div>
-            </Panel>
-            
-            <PanelResizeHandle className="h-2 bg-blue-200 hover:bg-blue-300 transition-colors duration-200 cursor-row-resize flex items-center justify-center">
-              <div className="w-12 h-1 bg-blue-500 rounded-full"></div>
-            </PanelResizeHandle>
-            
-            <Panel defaultSize={60} minSize={25}>
-              <div className="p-6 bg-white h-full overflow-hidden">
-                <QueryResults
-                  result={queryResult}
-                  isLoading={isExecuting}
-                  error={queryError}
-                />
-              </div>
-            </Panel>
-          </PanelGroup>
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar
+            isCollapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onConnect={handleConnect}
+            onDisconnect={handleDisconnect}
+            isConnected={isConnected}
+            isConnecting={isConnecting}
+            schema={schema}
+            onRefreshSchema={() => loadSchema()}
+            isSchemaLoading={isSchemaLoading}
+            onColumnClick={handleColumnClick}
+            queryHistory={queryHistory}
+            onSelectQuery={handleSelectQuery}
+            savedConnections={savedConnections}
+            onSaveConnection={saveConnection}
+            onDeleteConnection={deleteConnection}
+            sqlFiles={sqlFiles}
+            onCreateSqlFile={handleCreateSqlFile}
+            onUpdateSqlFile={handleUpdateSqlFile}
+            onDeleteSqlFile={deleteSqlFile}
+            onLoadSqlFile={handleLoadSqlFile}
+            currentQuery={queryText}
+            currentFileId={currentFileId}
+          />
+          
+          {/* Main content area with fixed layout */}
+          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+            <PanelGroup direction="vertical" className="flex-1">
+              <Panel defaultSize={40} minSize={25}>
+                <div className="p-6 bg-white dark:bg-gray-900 h-full transition-colors duration-300">
+                  <QueryEditor
+                    value={queryText}
+                    onChange={(value) => setQueryText(value || '')}
+                    onExecute={executeQuery}
+                    onSave={handleSaveQuery}
+                    isConnected={isConnected}
+                    isExecuting={isExecuting}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    currentFileName={getCurrentFileName()}
+                  />
+                </div>
+              </Panel>
+              
+              <PanelResizeHandle className="h-2 bg-blue-200 dark:bg-gray-700 hover:bg-blue-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-row-resize flex items-center justify-center">
+                <div className="w-12 h-1 bg-blue-500 dark:bg-gray-500 rounded-full"></div>
+              </PanelResizeHandle>
+              
+              <Panel defaultSize={60} minSize={25}>
+                <div className="p-6 bg-white dark:bg-gray-900 h-full overflow-hidden transition-colors duration-300">
+                  <QueryResults
+                    result={queryResult}
+                    isLoading={isExecuting}
+                    error={queryError}
+                  />
+                </div>
+              </Panel>
+            </PanelGroup>
+          </div>
         </div>
       </div>
-    </div>
+    </ThemeProvider>
   );
 }

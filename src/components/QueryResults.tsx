@@ -77,7 +77,7 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
     
     if (value === null) {
       return (
-        <span className="text-gray-400 italic">NULL</span>
+        <span className="text-gray-400 dark:text-gray-500 italic">NULL</span>
       );
     }
     
@@ -101,7 +101,7 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
       const jsonString = JSON.stringify(value, null, 2);
       return (
         <div className="relative group">
-          <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded max-h-20 overflow-y-auto">
+          <div className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded max-h-20 overflow-y-auto">
             {jsonString}
           </div>
           <CopyButton 
@@ -141,10 +141,10 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
     return (
       <div className="space-y-4 h-full flex flex-col">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Query Results</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Query Results</h3>
         </div>
-        <div className="flex items-center justify-center py-12 bg-gray-50 rounded-md flex-1">
-          <div className="flex items-center space-x-3 text-gray-600">
+        <div className="flex items-center justify-center py-12 bg-gray-50 dark:bg-gray-800 rounded-md flex-1">
+          <div className="flex items-center space-x-3 text-gray-600 dark:text-gray-400">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
             <span>Executing query...</span>
           </div>
@@ -157,10 +157,10 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
     return (
       <div className="space-y-4 h-full flex flex-col">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Query Results</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Query Results</h3>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="text-red-800">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+          <div className="text-red-800 dark:text-red-300">
             <strong>Error:</strong> {error}
           </div>
         </div>
@@ -172,12 +172,12 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
     return (
       <div className="space-y-4 h-full flex flex-col">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Query Results</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Query Results</h3>
         </div>
-        <div className="text-center py-12 bg-gray-50 rounded-md flex-1">
-          <Database className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Query</h3>
-          <p className="text-gray-600">Connect to a database and execute a query to see results here</p>
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-md flex-1">
+          <Database className="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Ready to Query</h3>
+          <p className="text-gray-600 dark:text-gray-400">Connect to a database and execute a query to see results here</p>
         </div>
       </div>
     );
@@ -188,8 +188,8 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
   return (
     <div className="space-y-4 h-full flex flex-col">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Query Results</h3>
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Query Results</h3>
+        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center space-x-1">
             <Database className="w-4 h-4" />
             <span>{currentResult.rowCount} rows</span>
@@ -203,7 +203,7 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
 
       {/* Query Tabs */}
       {queryTabs.length > 1 && (
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="-mb-px flex space-x-8">
             {queryTabs.map((tab) => (
               <button
@@ -211,12 +211,12 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {tab.title}
-                <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
                   {tab.result.rowCount}
                 </span>
               </button>
@@ -226,19 +226,19 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
       )}
 
       {currentResult.rows.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-md">
-          <p className="text-gray-600">Query executed successfully but returned no results</p>
+        <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-md">
+          <p className="text-gray-600 dark:text-gray-400">Query executed successfully but returned no results</p>
         </div>
       ) : (
-        <div className="border border-gray-200 rounded-md overflow-hidden flex-1">
+        <div className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden flex-1">
           <div className="overflow-auto h-full">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50 sticky top-0">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
                 <tr>
                   {Object.keys(currentResult.rows[0]).map((column) => (
                     <th
                       key={column}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                       style={{ minWidth: '150px', maxWidth: '300px' }}
                     >
                       {column}
@@ -246,13 +246,13 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 {currentResult.rows.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     {Object.entries(row).map(([column, value]) => (
                       <td 
                         key={column} 
-                        className="px-4 py-2 text-sm text-gray-900 relative"
+                        className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 relative"
                         style={{ 
                           minWidth: '150px', 
                           maxWidth: '300px',
@@ -292,8 +292,8 @@ const CopyButton: React.FC<CopyButtonProps> = ({ content, cellId, isCopied, onCo
         }}
         className={`p-1.5 rounded-md text-xs font-medium transition-all duration-200 shadow-sm ${
           isCopied
-            ? 'bg-green-100 text-green-700 border border-green-200'
-            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-800'
+            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700'
+            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100'
         }`}
         title={isCopied ? 'Copied!' : 'Copy cell content'}
       >
