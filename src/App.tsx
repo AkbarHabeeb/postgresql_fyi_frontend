@@ -189,13 +189,17 @@ export default function App() {
   }, []);
 
   const handleSaveQuery = useCallback(() => {
+    console.log('Save button clicked!', { currentFileId, queryText: queryText.length });
+    
     if (currentFileId) {
       // Update existing file
+      console.log('Updating existing file:', currentFileId);
       updateSqlFile(currentFileId, undefined, queryText);
       setOriginalFileContent(queryText);
     } else {
       // Create new file
       const fileName = `query-${Date.now()}.sql`;
+      console.log('Creating new file:', fileName);
       const fileId = createSqlFile(fileName, queryText);
       setCurrentFileId(fileId);
       setOriginalFileContent(queryText);

@@ -25,6 +25,19 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
 }) => {
   const editorRef = useRef<any>(null);
   const [showSaveTooltip, setShowSaveTooltip] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleSave = () => {
+    setSaveStatus('saving');
+    try {
+      onSave();
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveStatus('idle');
+    }
+  };
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
@@ -134,8 +147,9 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
       }
     });
 
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      onSave();
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, (e: any) => {
+      e?.preventDefault?.();
+      handleSave();
     });
   };
 
@@ -186,15 +200,23 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
         />
         
         {/* Save Button - Bottom Right Corner */}
-        <div className="absolute bottom-4 right-4">
+        <div className="absolute bottom-4 right-4 z-10">
           <button
-            onClick={onSave}
+            onClick={handleSave}
             onMouseEnter={() => setShowSaveTooltip(true)}
             onMouseLeave={() => setShowSaveTooltip(false)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg transition-all duration-200 transform hover:scale-105"
+            className={`flex items-center space-x-2 px-4 py-2 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg transition-all duration-200 transform hover:scale-105 ${
+              saveStatus === 'saving' 
+                ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500' 
+                : saveStatus === 'saved'
+                ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+            }`}
           >
-            <Save className="w-4 h-4" />
-            <span>Save</span>
+            <Save className={`w-4 h-4 ${saveStatus === 'saving' ? 'animate-pulse' : ''}`} />
+            <span>
+              {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save'}
+            </span>
           </button>
           
           {/* Save Tooltip */}
