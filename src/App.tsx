@@ -21,6 +21,8 @@ export default function App() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [currentDatabase, setCurrentDatabase] = useState<string | null>(null);
+  const [currentHost, setCurrentHost] = useState<string | null>(null);
   
   // Query State
   const [queryText, setQueryText] = useState('');
@@ -88,6 +90,8 @@ export default function App() {
       if (response.success && response.connectionId) {
         setConnectionId(response.connectionId);
         setIsConnected(true);
+        setCurrentDatabase(config.database);
+        setCurrentHost(config.host);
         setConnectionError(null);
         await loadSchema(response.connectionId);
       } else {
@@ -115,6 +119,8 @@ export default function App() {
     } finally {
       setConnectionId(null);
       setIsConnected(false);
+      setCurrentDatabase(null);
+      setCurrentHost(null);
       setSchema(null);
       setQueryResult(null);
       setQueryError(null);
@@ -233,6 +239,9 @@ export default function App() {
         <Header 
           isConnected={isConnected} 
           statusText={bridgeStatus.message}
+          bridgeConnected={bridgeStatus.connected}
+          currentDatabase={currentDatabase}
+          currentHost={currentHost}
         />
         
         {/* Bridge Service Status Box - Only show when NOT connected */}
