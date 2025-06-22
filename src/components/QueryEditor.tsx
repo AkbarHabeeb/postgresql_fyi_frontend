@@ -6,7 +6,7 @@ interface QueryEditorProps {
   value: string;
   onChange: (value: string | undefined) => void;
   onExecute: () => void;
-  onSave: () => void;
+  onSave: (fileName?: string) => void;
   isConnected: boolean;
   isExecuting: boolean;
   hasUnsavedChanges: boolean;
@@ -26,16 +26,34 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
   const editorRef = useRef<any>(null);
   const [showSaveTooltip, setShowSaveTooltip] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [showFileNameDialog, setShowFileNameDialog] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
 
-  const handleSave = () => {
+  const handleSave = (fileName?: string) => {
+    if (!currentFileName && !fileName) {
+      // Show file name dialog for new files
+      setShowFileNameDialog(true);
+      return;
+    }
+
     setSaveStatus('saving');
     try {
-      onSave();
+      onSave(fileName);
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
+      if (showFileNameDialog) {
+        setShowFileNameDialog(false);
+        setNewFileName('');
+      }
     } catch (error) {
       console.error('Save error:', error);
       setSaveStatus('idle');
+    }
+  };
+
+  const handleFileNameSubmit = () => {
+    if (newFileName.trim()) {
+      handleSave(newFileName.trim());
     }
   };
 
@@ -202,7 +220,7 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
         {/* Save Button - Bottom Right Corner */}
         <div className="absolute bottom-4 right-4 z-10">
           <button
-            onClick={handleSave}
+            onClick={() => handleSave()}
             onMouseEnter={() => setShowSaveTooltip(true)}
             onMouseLeave={() => setShowSaveTooltip(false)}
             className={`flex items-center space-x-2 px-4 py-2 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg transition-all duration-200 transform hover:scale-105 ${
@@ -228,6 +246,57 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
           )}
         </div>
       </div>
+
+      {/* File Name Dialog */}
+      {showFileNameDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Save SQL File</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  File Name
+                </label>
+                <input
+                  type="text"
+                  value={newFileName}
+                  onChange={(e) => setNewFileName(e.target.value)}
+                  placeholder="my-query.sql"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleFileNameSubmit();
+                    }
+                    if (e.key === 'Escape') {
+                      setShowFileNameDialog(false);
+                      setNewFileName('');
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleFileNameSubmit}
+                  disabled={!newFileName.trim()}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Save File
+                </button>
+                <button
+                  onClick={() => {
+                    setShowFileNameDialog(false);
+                    setNewFileName('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

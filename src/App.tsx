@@ -188,17 +188,16 @@ export default function App() {
     setOriginalFileContent(file.content);
   }, []);
 
-  const handleSaveQuery = useCallback(() => {
-    console.log('Save button clicked!', { currentFileId, queryText: queryText.length });
+  const handleSaveQuery = useCallback((fileName?: string) => {
+    console.log('Save button clicked!', { currentFileId, queryText: queryText.length, fileName });
     
     if (currentFileId) {
       // Update existing file
       console.log('Updating existing file:', currentFileId);
       updateSqlFile(currentFileId, undefined, queryText);
       setOriginalFileContent(queryText);
-    } else {
-      // Create new file
-      const fileName = `query-${Date.now()}.sql`;
+    } else if (fileName) {
+      // Create new file with provided name
       console.log('Creating new file:', fileName);
       const fileId = createSqlFile(fileName, queryText);
       setCurrentFileId(fileId);
@@ -285,8 +284,8 @@ export default function App() {
           currentFileId={currentFileId}
         />
         
-        {/* Fixed width container for right pane */}
-        <div className="flex-1 flex flex-col overflow-hidden" style={{ minWidth: 0 }}>
+        {/* Main content area with fixed layout */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <PanelGroup direction="vertical" className="flex-1">
             <Panel defaultSize={40} minSize={25}>
               <div className="p-6 bg-white h-full">
