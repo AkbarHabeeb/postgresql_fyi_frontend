@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Clock, Database } from 'lucide-react';
+import { Clock, Database, Copy, Check } from 'lucide-react';
 import { QueryResult } from '../types';
 
 interface QueryResultsProps {
@@ -14,8 +14,13 @@ interface QueryTab {
   result: QueryResult;
 }
 
+interface CopyState {
+  [key: string]: boolean; // cellId -> isCopied
+}
+
 export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, error }) => {
   const [activeTab, setActiveTab] = useState<string>('0');
+  const [copyState, setCopyState] = useState<CopyState>({});
   
   // Parse multiple query results from a single result
   const queryTabs = useMemo<QueryTab[]>(() => {
@@ -29,6 +34,108 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
       result: result
     }];
   }, [result]);
+
+  const copyToClipboard = async (content: string, cellId: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopyState(prev => ({ ...prev, [cellId]: true }));
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopyState(prev => ({ ...prev, [cellId]: false }));
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = content;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopyState(prev => ({ ...prev, [cellId]: true }));
+        setTimeout(() => {
+          setCopyState(prev => ({ ...prev, [cellId]: false }));
+        }, 2000);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed: ', fallbackErr);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  const shouldShowCopyButton = (value: any): boolean => {
+    if (value === null || value === undefined) return false;
+    const stringValue = String(value);
+    return stringValue.length > 50; // Show copy button for content longer than 50 characters
+  };
+
+  const formatCellValue = (value: any, rowIndex: number, columnName: string) => {
+    const cellId = `${rowIndex}-${columnName}`;
+    const showCopy = shouldShowCopyButton(value);
+    
+    if (value === null) {
+      return (
+        <span className="text-gray-400 italic">NULL</span>
+      );
+    }
+    
+    if (typeof value === 'number') {
+      return (
+        <div className="relative group">
+          <span className="font-mono text-right block">{value}</span>
+          {showCopy && (
+            <CopyButton 
+              content={String(value)} 
+              cellId={cellId} 
+              isCopied={copyState[cellId]} 
+              onCopy={copyToClipboard}
+            />
+          )}
+        </div>
+      );
+    }
+    
+    if (typeof value === 'object') {
+      const jsonString = JSON.stringify(value, null, 2);
+      return (
+        <div className="relative group">
+          <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded max-h-20 overflow-y-auto">
+            {jsonString}
+          </div>
+          <CopyButton 
+            content={jsonString} 
+            cellId={cellId} 
+            isCopied={copyState[cellId]} 
+            onCopy={copyToClipboard}
+          />
+        </div>
+      );
+    }
+    
+    const stringValue = String(value);
+    const isLongContent = stringValue.length > 100;
+    
+    return (
+      <div className="relative group">
+        <div className="truncate" title={stringValue}>
+          {isLongContent 
+            ? `${stringValue.substring(0, 100)}...` 
+            : stringValue
+          }
+        </div>
+        {showCopy && (
+          <CopyButton 
+            content={stringValue} 
+            cellId={cellId} 
+            isCopied={copyState[cellId]} 
+            onCopy={copyToClipboard}
+          />
+        )}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -145,7 +252,7 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
                     {Object.entries(row).map(([column, value]) => (
                       <td 
                         key={column} 
-                        className="px-4 py-2 text-sm text-gray-900"
+                        className="px-4 py-2 text-sm text-gray-900 relative"
                         style={{ 
                           minWidth: '150px', 
                           maxWidth: '300px',
@@ -153,22 +260,7 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
                           whiteSpace: 'pre-wrap'
                         }}
                       >
-                        {value === null ? (
-                          <span className="text-gray-400 italic">NULL</span>
-                        ) : typeof value === 'number' ? (
-                          <span className="font-mono text-right block">{value}</span>
-                        ) : typeof value === 'object' ? (
-                          <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded max-h-20 overflow-y-auto">
-                            {JSON.stringify(value, null, 2)}
-                          </div>
-                        ) : (
-                          <div className="truncate" title={String(value)}>
-                            {String(value).length > 100 
-                              ? `${String(value).substring(0, 100)}...` 
-                              : String(value)
-                            }
-                          </div>
-                        )}
+                        {formatCellValue(value, index, column)}
                       </td>
                     ))}
                   </tr>
@@ -178,6 +270,42 @@ export const QueryResults: React.FC<QueryResultsProps> = ({ result, isLoading, e
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// Copy Button Component
+interface CopyButtonProps {
+  content: string;
+  cellId: string;
+  isCopied: boolean;
+  onCopy: (content: string, cellId: string) => void;
+}
+
+const CopyButton: React.FC<CopyButtonProps> = ({ content, cellId, isCopied, onCopy }) => {
+  return (
+    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onCopy(content, cellId);
+        }}
+        className={`p-1.5 rounded-md text-xs font-medium transition-all duration-200 shadow-sm ${
+          isCopied
+            ? 'bg-green-100 text-green-700 border border-green-200'
+            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-800'
+        }`}
+        title={isCopied ? 'Copied!' : 'Copy cell content'}
+      >
+        {isCopied ? (
+          <div className="flex items-center space-x-1">
+            <Check className="w-3 h-3" />
+            <span>Copied!</span>
+          </div>
+        ) : (
+          <Copy className="w-3 h-3" />
+        )}
+      </button>
     </div>
   );
 };
