@@ -23,11 +23,17 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            {/* Strong Elephant Logo */}
-            <div className="text-2xl font-bold">🐘</div>
+            {/* Elephant Logo */}
+            <div className="flex-shrink-0">
+              <img 
+                src="/elephant logo.png" 
+                alt="PostgreSQL FYI Logo" 
+                className="w-8 h-8 object-contain"
+              />
+            </div>
             <div className="flex items-center space-x-3">
               <h1 className="text-lg font-semibold text-white">
-                PostgreSQL Web Client
+                PostgreSQL FYI
               </h1>
               {/* Database Name Badge - Only show when connected */}
               {isConnected && currentDatabase && (
