@@ -1,0 +1,30 @@
+import React from 'react';
+
+interface HeaderProps {
+  isConnected: boolean;
+  statusText: string;
+}
+
+export const Header: React.FC<HeaderProps> = ({ isConnected, statusText }) => {
+  return (
+    <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-3 shadow-lg">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          {/* Strong Elephant Logo */}
+          <div className="text-2xl font-bold">🐘</div>
+          <h1 className={`text-lg font-semibold transition-colors duration-300 ${
+            isConnected ? 'text-white' : 'text-blue-100'
+          }`}>
+            PostgreSQL Web Client
+          </h1>
+        </div>
+        <div className="flex items-center space-x-2 text-sm">
+          <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+            isConnected ? 'bg-green-400' : 'bg-red-400'
+          }`} />
+          <span className="text-blue-100">{statusText}</span>
+        </div>
+      </div>
+    </div>
+  );
+};

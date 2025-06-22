@@ -1,0 +1,250 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
+import { QueryEditor } from './components/QueryEditor';
+import { QueryResults } from './components/QueryResults';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { useSavedConnections } from './hooks/useSavedConnections';
+import { bridgeService } from './services/bridgeService';
+import { ConnectionConfig, QueryResult, DatabaseSchema, QueryHistoryItem } from './types';
+
+export default function App() {
+  // UI State
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [bridgeStatus, setBridgeStatus] = useState({ connected: false, message: 'Checking bridge...' });
+  
+  // Connection State
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  
+  // Query State
+  const [queryText, setQueryText] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  
+  // Schema State
+  const [schema, setSchema] = useState<DatabaseSchema | null>(null);
+  const [isSchemaLoading, setIsSchemaLoading] = useState(false);
+  
+  // History State
+  const [queryHistory, setQueryHistory] = useLocalStorage<QueryHistoryItem[]>('psql-query-history', []);
+  
+  // Saved Connections
+  const [savedConnections, saveConnection, deleteConnection] = useSavedConnections();
+
+  // Check bridge status on mount and periodically
+  useEffect(() => {
+    const checkBridge = async () => {
+      try {
+        const response = await bridgeService.checkHealth();
+        if (response.success) {
+          setBridgeStatus({
+            connected: true,
+            message: `Bridge running (${response.activeConnections || 0} connections)`
+          });
+          setConnectionError(null);
+        } else {
+          setBridgeStatus({ connected: false, message: 'Bridge not running' });
+          setConnectionError('Bridge service returned an error');
+        }
+      } catch (error) {
+        setBridgeStatus({ connected: false, message: 'Bridge not running' });
+        setConnectionError('Bridge service not accessible');
+      }
+    };
+
+    checkBridge();
+    const interval = setInterval(checkBridge, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleConnect = useCallback(async (config: ConnectionConfig) => {
+    setIsConnecting(true);
+    setConnectionError(null);
+    
+    try {
+      const response = await bridgeService.connect(config);
+      if (response.success && response.connectionId) {
+        setConnectionId(response.connectionId);
+        setIsConnected(true);
+        setConnectionError(null);
+        await loadSchema(response.connectionId);
+      } else {
+        const errorMsg = response.error || 'Connection failed';
+        setConnectionError(errorMsg);
+        throw new Error(errorMsg);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+      setConnectionError(errorMessage);
+      console.error('Connection error:', error);
+      throw error;
+    } finally {
+      setIsConnecting(false);
+    }
+  }, []);
+
+  const handleDisconnect = useCallback(async () => {
+    if (!connectionId) return;
+    
+    try {
+      await bridgeService.disconnect(connectionId);
+    } catch (error) {
+      console.error('Disconnect error:', error);
+    } finally {
+      setConnectionId(null);
+      setIsConnected(false);
+      setSchema(null);
+      setQueryResult(null);
+      setQueryError(null);
+      setConnectionError(null);
+    }
+  }, [connectionId]);
+
+  const loadSchema = useCallback(async (connId?: string) => {
+    const activeConnectionId = connId || connectionId;
+    if (!activeConnectionId) return;
+
+    setIsSchemaLoading(true);
+    try {
+      const response = await bridgeService.getSchema(activeConnectionId);
+      if (response.success && response.schema) {
+        setSchema(response.schema);
+      } else {
+        console.error('Schema load error:', response.error);
+      }
+    } catch (error) {
+      console.error('Schema load error:', error);
+    } finally {
+      setIsSchemaLoading(false);
+    }
+  }, [connectionId]);
+
+  const executeQuery = useCallback(async () => {
+    if (!connectionId || !queryText.trim()) return;
+
+    setIsExecuting(true);
+    setQueryError(null);
+    setQueryResult(null);
+
+    try {
+      const response = await bridgeService.executeQuery(connectionId, queryText.trim());
+      if (response.success && response.data) {
+        setQueryResult(response.data);
+        // Add to history
+        const newHistoryItem: QueryHistoryItem = {
+          sql: queryText.trim(),
+          timestamp: new Date()
+        };
+        setQueryHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]); // Keep last 10
+      } else {
+        setQueryError(response.error || 'Query execution failed');
+      }
+    } catch (error) {
+      setQueryError(error instanceof Error ? error.message : 'Network error');
+    } finally {
+      setIsExecuting(false);
+    }
+  }, [connectionId, queryText, setQueryHistory]);
+
+  const handleColumnClick = useCallback((columnName: string) => {
+    setQueryText(prev => {
+      const lines = prev.split('\n');
+      const lastLine = lines[lines.length - 1];
+      const newLastLine = lastLine ? `${lastLine} ${columnName}` : columnName;
+      return [...lines.slice(0, -1), newLastLine].join('\n');
+    });
+  }, []);
+
+  const handleSelectQuery = useCallback((sql: string) => {
+    setQueryText(sql);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Header 
+        isConnected={isConnected} 
+        statusText={bridgeStatus.message}
+      />
+      
+      {/* Bridge Service Status Box - Only show when NOT connected */}
+      {!bridgeStatus.connected && (
+        <div className="mx-6 mt-4 mb-2">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="w-3 h-3 bg-red-400 rounded-full mt-1"></div>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Bridge Service Required</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p className="mb-2">To use this PostgreSQL client, you need to install and run the bridge service:</p>
+                  <div className="bg-red-100 rounded-md p-3 font-mono text-xs">
+                    <div className="mb-1">1. Install the bridge service:</div>
+                    <div className="bg-white rounded px-2 py-1 mb-2">npm install -g connectpsql</div>
+                    <div className="mb-1">2. Start the bridge service:</div>
+                    <div className="bg-white rounded px-2 py-1">connectpsql start --cors-origin "*" --port 1234</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
+          isConnected={isConnected}
+          isConnecting={isConnecting}
+          schema={schema}
+          onRefreshSchema={() => loadSchema()}
+          isSchemaLoading={isSchemaLoading}
+          onColumnClick={handleColumnClick}
+          queryHistory={queryHistory}
+          onSelectQuery={handleSelectQuery}
+          savedConnections={savedConnections}
+          onSaveConnection={saveConnection}
+          onDeleteConnection={deleteConnection}
+        />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <PanelGroup direction="vertical" className="flex-1">
+            <Panel defaultSize={40} minSize={25}>
+              <div className="p-6 bg-white h-full">
+                <QueryEditor
+                  value={queryText}
+                  onChange={(value) => setQueryText(value || '')}
+                  onExecute={executeQuery}
+                  isConnected={isConnected}
+                  isExecuting={isExecuting}
+                />
+              </div>
+            </Panel>
+            
+            <PanelResizeHandle className="h-2 bg-blue-200 hover:bg-blue-300 transition-colors duration-200 cursor-row-resize flex items-center justify-center">
+              <div className="w-12 h-1 bg-blue-500 rounded-full"></div>
+            </PanelResizeHandle>
+            
+            <Panel defaultSize={60} minSize={25}>
+              <div className="p-6 bg-white h-full overflow-hidden">
+                <QueryResults
+                  result={queryResult}
+                  isLoading={isExecuting}
+                  error={queryError}
+                />
+              </div>
+            </Panel>
+          </PanelGroup>
+        </div>
+      </div>
+    </div>
+  );
+}
