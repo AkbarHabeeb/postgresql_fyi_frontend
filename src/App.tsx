@@ -165,20 +165,23 @@ export default function App() {
     }
   }, [connectionId]);
 
-  const executeQuery = useCallback(async () => {
-    if (!connectionId || !queryText.trim()) return;
+  const executeQuery = useCallback(async (specificQuery?: string) => {
+    if (!connectionId) return;
+    
+    const queryToExecute = specificQuery || queryText.trim();
+    if (!queryToExecute) return;
 
     setIsExecuting(true);
     setQueryError(null);
     setQueryResult(null);
 
     try {
-      const response = await bridgeService.executeQuery(connectionId, queryText.trim());
+      const response = await bridgeService.executeQuery(connectionId, queryToExecute);
       if (response.success && response.data) {
         setQueryResult(response.data);
         // Add to history
         const newHistoryItem: QueryHistoryItem = {
-          sql: queryText.trim(),
+          sql: queryToExecute,
           timestamp: new Date()
         };
         setQueryHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]); // Keep last 10

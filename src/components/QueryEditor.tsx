@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 interface QueryEditorProps {
   value: string;
   onChange: (value: string | undefined) => void;
-  onExecute: () => void;
+  onExecute: (query?: string) => void;
   onSave: (fileName?: string) => void;
   isConnected: boolean;
   isExecuting: boolean;
@@ -30,6 +30,147 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [showFileNameDialog, setShowFileNameDialog] = useState(false);
   const [newFileName, setNewFileName] = useState('');
+  const [currentQuery, setCurrentQuery] = useState<string>('');
+  const [queryContext, setQueryContext] = useState<'all' | 'selected' | 'current'>('all');
+
+  // Parse SQL queries separated by semicolons
+  const parseQueries = (sql: string): string[] => {
+    const queries: string[] = [];
+    let currentQuery = '';
+    let inString = false;
+    let stringChar = '';
+    let inComment = false;
+    let inMultiLineComment = false;
+    
+    for (let i = 0; i < sql.length; i++) {
+      const char = sql[i];
+      const nextChar = sql[i + 1];
+      
+      // Handle multi-line comments
+      if (!inString && !inComment && char === '/' && nextChar === '*') {
+        inMultiLineComment = true;
+        currentQuery += char;
+        continue;
+      }
+      
+      if (inMultiLineComment && char === '*' && nextChar === '/') {
+        inMultiLineComment = false;
+        currentQuery += char;
+        continue;
+      }
+      
+      // Handle single-line comments
+      if (!inString && !inMultiLineComment && char === '-' && nextChar === '-') {
+        inComment = true;
+        currentQuery += char;
+        continue;
+      }
+      
+      if (inComment && char === '\n') {
+        inComment = false;
+        currentQuery += char;
+        continue;
+      }
+      
+      // Skip processing if in comments
+      if (inComment || inMultiLineComment) {
+        currentQuery += char;
+        continue;
+      }
+      
+      // Handle string literals
+      if (!inString && (char === "'" || char === '"')) {
+        inString = true;
+        stringChar = char;
+        currentQuery += char;
+        continue;
+      }
+      
+      if (inString && char === stringChar) {
+        // Check for escaped quotes
+        if (sql[i - 1] !== '\\') {
+          inString = false;
+          stringChar = '';
+        }
+        currentQuery += char;
+        continue;
+      }
+      
+      // Handle semicolon (query separator)
+      if (!inString && char === ';') {
+        currentQuery += char;
+        const trimmedQuery = currentQuery.trim();
+        if (trimmedQuery) {
+          queries.push(trimmedQuery);
+        }
+        currentQuery = '';
+        continue;
+      }
+      
+      currentQuery += char;
+    }
+    
+    // Add the last query if it doesn't end with semicolon
+    const trimmedQuery = currentQuery.trim();
+    if (trimmedQuery) {
+      queries.push(trimmedQuery);
+    }
+    
+    return queries.filter(q => q.length > 0);
+  };
+
+  // Get the query at cursor position
+  const getQueryAtCursor = (sql: string, cursorPosition: number): string => {
+    const queries = parseQueries(sql);
+    let position = 0;
+    
+    for (const query of queries) {
+      const queryStart = sql.indexOf(query, position);
+      const queryEnd = queryStart + query.length;
+      
+      if (cursorPosition >= queryStart && cursorPosition <= queryEnd) {
+        return query;
+      }
+      
+      position = queryEnd;
+    }
+    
+    return queries[0] || sql; // Fallback to first query or entire content
+  };
+
+  // Update current query context
+  const updateQueryContext = () => {
+    if (!editorRef.current) return;
+    
+    const editor = editorRef.current;
+    const selection = editor.getSelection();
+    const selectedText = editor.getModel()?.getValueInRange(selection);
+    
+    if (selectedText && selectedText.trim()) {
+      setCurrentQuery(selectedText.trim());
+      setQueryContext('selected');
+    } else {
+      const cursorPosition = editor.getPosition();
+      const model = editor.getModel();
+      if (model && cursorPosition) {
+        const offset = model.getOffsetAt(cursorPosition);
+        const queryAtCursor = getQueryAtCursor(value, offset);
+        setCurrentQuery(queryAtCursor);
+        setQueryContext(queryAtCursor === value ? 'all' : 'current');
+      } else {
+        setCurrentQuery(value);
+        setQueryContext('all');
+      }
+    }
+  };
+
+  const handleExecute = () => {
+    if (currentQuery.trim()) {
+      onExecute(currentQuery);
+    } else {
+      onExecute();
+    }
+  };
 
   const handleSave = (fileName?: string) => {
     if (!currentFileName && !fileName) {
@@ -56,6 +197,19 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
   const handleFileNameSubmit = () => {
     if (newFileName.trim()) {
       handleSave(newFileName.trim());
+    }
+  };
+
+  const getExecuteButtonText = () => {
+    if (isExecuting) return 'Executing...';
+    
+    switch (queryContext) {
+      case 'selected':
+        return 'Execute Selection (Ctrl+Enter)';
+      case 'current':
+        return 'Execute Current Query (Ctrl+Enter)';
+      default:
+        return 'Execute All (Ctrl+Enter)';
     }
   };
 
@@ -163,7 +317,7 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
     // Add keyboard shortcuts
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
       if (isConnected && !isExecuting) {
-        onExecute();
+        handleExecute();
       }
     });
 
@@ -171,7 +325,26 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
       e?.preventDefault?.();
       handleSave();
     });
+
+    // Listen for selection and cursor changes
+    editor.onDidChangeCursorSelection(() => {
+      updateQueryContext();
+    });
+
+    editor.onDidChangeCursorPosition(() => {
+      updateQueryContext();
+    });
+
+    // Initial context update
+    updateQueryContext();
   };
+
+  // Update context when value changes
+  useEffect(() => {
+    if (editorRef.current) {
+      updateQueryContext();
+    }
+  }, [value]);
 
   return (
     <div className="space-y-4 h-full flex flex-col">
@@ -187,15 +360,38 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
         </div>
         <div className="flex space-x-2">
           <button
-            onClick={onExecute}
+            onClick={handleExecute}
             disabled={!isConnected || isExecuting}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Play className="w-4 h-4" />
-            <span>{isExecuting ? 'Executing...' : 'Execute (Ctrl+Enter)'}</span>
+            <span>{getExecuteButtonText()}</span>
           </button>
         </div>
       </div>
+      
+      {/* Query Context Indicator */}
+      {isConnected && (
+        <div className="flex items-center space-x-2 text-xs">
+          <span className="text-gray-500 dark:text-gray-400">Will execute:</span>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            queryContext === 'selected' 
+              ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+              : queryContext === 'current'
+              ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+          }`}>
+            {queryContext === 'selected' && 'Selected text'}
+            {queryContext === 'current' && 'Current query'}
+            {queryContext === 'all' && 'All queries'}
+          </span>
+          {currentQuery && currentQuery !== value && (
+            <span className="text-gray-400 dark:text-gray-500 font-mono text-xs truncate max-w-xs">
+              {currentQuery.length > 50 ? `${currentQuery.substring(0, 50)}...` : currentQuery}
+            </span>
+          )}
+        </div>
+      )}
       
       <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden flex-1 relative">
         <Editor
